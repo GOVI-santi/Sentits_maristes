@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Els òrgans dels sentits</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", sans-serif;
+    background: linear-gradient(160deg, #e0f7ff 0%, #fff6e0 100%);
+    color: #333;
+    min-height: 100vh;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+  }
+  .side { position: sticky; top: 20px; }
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { position: static; }
+  }
+  h1 { text-align: center; font-size: 2.6em; margin: 10px 0 0; color: #1a6fb5; }
+  h2 {
+    text-align: center;
+    font-size: 2em;
+    margin: 40px 0 0;
+    padding-top: 30px;
+    border-top: 3px dotted #9bbbd4;
+    color: #1a6fb5;
+  }
+  .subtitle { text-align: center; font-size: 1.2em; line-height: 1.5; margin: 16px 0 14px; color: #666; }
+
+  .text-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px 28px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    font-size: 1.35em;
+    line-height: 2.4;
+  }
+  .text-box p { margin: 6px 0; }
+
+  .blank {
+    display: inline-block;
+    min-width: 130px;
+    min-height: 44px;
+    vertical-align: middle;
+    border: 3px dashed #9bbbd4;
+    border-radius: 12px;
+    background: #f3f9ff;
+    text-align: center;
+    margin: 0 4px;
+    line-height: 38px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .blank.hover { background: #fff3c4; border-color: #f0b400; }
+  .blank.filled { border-style: solid; }
+  .blank.correct { background: #d8f5d0; border-color: #3cb043; }
+  .blank.wrong { background: #ffd9d9; border-color: #e04848; }
+  .blank .card { margin: 0; }
+
+  /* Diagrama de l'ull */
+  .diagram-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  }
+  .diagram { position: relative; width: 100%; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .diagram .blank {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    min-width: 140px;
+    font-size: 1.1em;
+    background: #f3f9ff;
+  }
+  .diagram .blank.hover { background: #fff3c4; }
+  .diagram .blank.correct { background: #d8f5d0; }
+  .diagram .blank.wrong { background: #ffd9d9; }
+
+  .bank-title { font-size: 1.2em; line-height: 1.5; margin: 16px 0 14px; text-align: center; }
+  .bank {
+    min-height: 80px;
+    background: rgba(255,255,255,0.7);
+    border: 3px dashed #c9c9c9;
+    border-radius: 20px;
+    padding: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+  }
+  .bank.hover { background: #fff3c4; border-color: #f0b400; }
+  @media (min-width: 761px) {
+    .bank { flex-direction: column; flex-wrap: nowrap; min-height: 300px; justify-content: flex-start; }
+  }
+
+  .card {
+    display: inline-block;
+    padding: 0 16px;
+    height: 38px;
+    line-height: 38px;
+    border-radius: 10px;
+    background: #ffb84d;
+    color: #4a2a00;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    box-shadow: 0 3px 0 #d98a1c;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .bank .card { font-size: 1.3em; }
+  .card.dragging {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    cursor: grabbing;
+    transform: rotate(-4deg) scale(1.08);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+  }
+
+  .buttons { display: flex; justify-content: center; gap: 16px; margin: 26px 0 10px; flex-wrap: wrap; }
+  button {
+    font-family: inherit;
+    font-size: 1.3em;
+    padding: 12px 28px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    color: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  }
+  button:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+  .check { background: #3cb043; }
+  .reset { background: #1a6fb5; }
+
+  .result {
+    text-align: center;
+    font-size: 1.6em;
+    min-height: 1.6em;
+    margin: 14px 0 30px;
+    font-weight: bold;
+  }
+  .result.good { color: #2e8b3a; }
+  .result.bad { color: #d0571c; }
+
+  /* Navegació entre pàgines */
+  .view { display: none; }
+  .view.active { display: block; }
+  .back {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 1.1em;
+    color: #1a6fb5;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  .back:hover { text-decoration: underline; }
+
+  /* Menú inicial */
+  .menu {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin: 30px 0;
+  }
+  .organ {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 240px;
+    padding: 30px 20px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 4px 14px rgba(0,0,0,0.08);
+    text-decoration: none;
+    color: #1a6fb5;
+    font-size: 1.8em;
+    font-weight: bold;
+    transition: transform 0.15s;
+  }
+  .organ:hover { transform: translateY(-4px) scale(1.03); }
+  .organ .icon { font-size: 2.4em; }
+
+  .footer {
+    text-align: center;
+    margin-top: 50px;
+    padding: 16px;
+    font-size: 0.95em;
+    color: #6a8298;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ================= MENÚ ================= -->
+<div class="view" id="menu">
+  <h1>🧠 Els òrgans dels sentits</h1>
+  <p class="subtitle">Tria un òrgan per començar!</p>
+  <div class="menu">
+    <a class="organ" href="#ull"><span class="icon">👁️</span>L'ull</a>
+    <a class="organ" href="#pell"><span class="icon">🖐️</span>La pell</a>
+    <a class="organ" href="#nas"><span class="icon">👃</span>El nas</a>
+    <a class="organ" href="#orella"><span class="icon">👂</span>L'orella</a>
+  </div>
+  <footer class="footer">
+    Designed by Berta Vinent &amp; Santi Gonzalez · Powered by Antigravity
+  </footer>
+</div>
+
+<!-- ================= L'ULL ================= -->
+<div class="view" id="ull">
+  <a class="back" href="#menu">⬅️ Tornar al menú</a>
+  <h1>👁️ L'ull 👁️</h1>
+
+  <!-- ===== Exercici 1: text amb buits ===== -->
+  <section class="exercise">
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada paraula al lloc correcte!</p>
+        <div class="text-box" data-text="ull"></div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Paraules</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+
+  <!-- ===== Exercici 2: parts de l'ull ===== -->
+  <section class="exercise">
+    <h2>🔍 Les parts de l'ull</h2>
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada nom a la part de l'ull que li correspon!</p>
+        <div class="diagram-box">
+          <div class="diagram">
+            <!-- La imatge eye.jpg es mostra a 2000 x 1091; l'espai de dalt i de baix és per a les etiquetes -->
+            <svg viewBox="0 -130 2000 1240" xmlns="http://www.w3.org/2000/svg">
+              <image href="eye.jpg" x="0" y="0" width="2000" height="1091"/>
+
+              <!-- Línies que assenyalen cada part -->
+              <g stroke="#333" stroke-width="5" fill="#333">
+                <line x1="200" y1="250" x2="460" y2="440"/> <circle cx="460" cy="440" r="12"/> <!-- còrnia -->
+                <line x1="200" y1="545" x2="575" y2="545"/> <circle cx="575" cy="545" r="12"/> <!-- pupil·la -->
+                <line x1="200" y1="850" x2="550" y2="690"/> <circle cx="550" cy="690" r="12"/> <!-- iris -->
+                <line x1="650" y1="-60" x2="680" y2="450"/> <circle cx="680" cy="450" r="12"/> <!-- cristal·lí -->
+                <line x1="1050" y1="-60" x2="1000" y2="300"/> <circle cx="1000" cy="300" r="12"/> <!-- humor vitri -->
+                <line x1="1800" y1="250" x2="1420" y2="380"/> <circle cx="1420" cy="380" r="12"/> <!-- retina -->
+                <line x1="1780" y1="1010" x2="1620" y2="770"/> <circle cx="1620" cy="770" r="12"/> <!-- nervi òptic -->
+              </g>
+            </svg>
+            <!-- Buits (posició en coordenades del dibuix, les mateixes que el viewBox) -->
+            <span class="blank" data-x="200" data-y="250" data-answers='["còrnia"]'></span>
+            <span class="blank" data-x="200" data-y="545" data-answers='["pupil·la"]'></span>
+            <span class="blank" data-x="200" data-y="850" data-answers='["iris"]'></span>
+            <span class="blank" data-x="650" data-y="-60" data-answers='["cristal·lí"]'></span>
+            <span class="blank" data-x="1050" data-y="-60" data-answers='["humor vitri"]'></span>
+            <span class="blank" data-x="1800" data-y="250" data-answers='["retina"]'></span>
+            <span class="blank" data-x="1780" data-y="1010" data-answers='["nervi òptic"]'></span>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Parts de l'ull</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+</div>
+
+<!-- ================= LA PELL ================= -->
+<div class="view" id="pell">
+  <a class="back" href="#menu">⬅️ Tornar al menú</a>
+  <h1>🖐️ La pell 🖐️</h1>
+
+  <!-- ===== Exercici 1: text amb buits ===== -->
+  <section class="exercise">
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada paraula al lloc correcte!</p>
+        <div class="text-box" data-text="pell"></div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Paraules</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+
+  <!-- ===== Exercici 2: parts de la pell ===== -->
+  <section class="exercise">
+    <h2>🔍 Les parts de la pell</h2>
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada nom a la part de la pell que li correspon!</p>
+        <div class="diagram-box">
+          <div class="diagram">
+            <!-- La imatge pell_net.png es mostra a 1024 x 768; l'espai de l'esquerra és per a les etiquetes -->
+            <svg viewBox="-170 0 1194 768" xmlns="http://www.w3.org/2000/svg">
+              <image href="pell_net.png" x="0" y="0" width="1024" height="768"/>
+
+              <!-- Línies que assenyalen cada part -->
+              <g stroke="#333" stroke-width="3" fill="#333">
+                <line x1="20" y1="258" x2="398" y2="320"/> <circle cx="398" cy="320" r="6"/> <!-- fol·licles pilosos -->
+                <line x1="690" y1="70" x2="552" y2="462"/> <circle cx="552" cy="462" r="6"/> <!-- glàndules sudoroses -->
+                <line x1="20" y1="603" x2="388" y2="583"/> <circle cx="388" cy="583" r="6"/> <!-- terminacions nervioses -->
+              </g>
+              <!-- Claus que marquen les tres capes -->
+              <g stroke="#333" stroke-width="3" fill="none">
+                <path d="M780 165 H795 V278 H780 M795 221 H900"/> <!-- epidermis -->
+                <path d="M780 288 H795 V510 H780 M795 399 H900"/> <!-- dermis -->
+                <path d="M780 528 H795 V638 H780 M795 583 H900"/> <!-- hipodermis -->
+              </g>
+            </svg>
+            <!-- Buits (posició en coordenades del dibuix, les mateixes que el viewBox) -->
+            <span class="blank" data-x="20" data-y="258" data-answers='["fol·licles pilosos"]'></span>
+            <span class="blank" data-x="690" data-y="70" data-answers='["glàndules sudoroses"]'></span>
+            <span class="blank" data-x="20" data-y="603" data-answers='["terminacions nervioses"]'></span>
+            <span class="blank" data-x="910" data-y="221" data-answers='["epidermis"]'></span>
+            <span class="blank" data-x="910" data-y="399" data-answers='["dermis"]'></span>
+            <span class="blank" data-x="910" data-y="583" data-answers='["hipodermis"]'></span>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Parts de la pell</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+</div>
+
+<!-- ================= EL NAS ================= -->
+<div class="view" id="nas">
+  <a class="back" href="#menu">⬅️ Tornar al menú</a>
+  <h1>👃 El nas 👃</h1>
+
+  <!-- ===== Exercici 1: text amb buits ===== -->
+  <section class="exercise">
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada paraula al lloc correcte!</p>
+        <div class="text-box" data-text="nas"></div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Paraules</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+
+  <!-- ===== Exercici 2: parts del nas ===== -->
+  <section class="exercise">
+    <h2>🔍 Les parts del nas</h2>
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada nom a la part del nas que li correspon!</p>
+        <div class="diagram-box">
+          <div class="diagram">
+            <!-- La imatge nose.jpg es mostra a 660 x 752 (2x original 330 x 376) -->
+            <svg viewBox="0 0 1260 850" xmlns="http://www.w3.org/2000/svg">
+              <image href="nose.jpg" x="290" y="50" width="660" height="752"/>
+
+              <!-- Línies que assenyalen cada part -->
+              <g stroke="#333" stroke-width="4" fill="#333">
+                <line x1="140" y1="190" x2="570" y2="300"/> <circle cx="570" cy="300" r="8"/> <!-- membrana olfactoria -->
+                <line x1="140" y1="340" x2="420" y2="350"/> <circle cx="420" cy="350" r="8"/> <!-- membrana mucosa -->
+                <line x1="140" y1="490" x2="380" y2="470"/> <circle cx="380" cy="470" r="8"/> <!-- fosses nasals -->
+                <line x1="1110" y1="220" x2="690" y2="246"/> <circle cx="690" cy="246" r="8"/> <!-- nervi olfactori -->
+                <line x1="1110" y1="390" x2="530" y2="400"/> <circle cx="530" cy="400" r="8"/> <!-- cavitat nasal -->
+              </g>
+            </svg>
+            <!-- Buits (posició en coordenades del dibuix, les mateixes que el viewBox) -->
+            <span class="blank" data-x="140" data-y="190" data-answers='["membrana olfactoria", "membrana olfactòria"]'></span>
+            <span class="blank" data-x="140" data-y="340" data-answers='["membrana mucosa"]'></span>
+            <span class="blank" data-x="140" data-y="490" data-answers='["fosses nasals"]'></span>
+            <span class="blank" data-x="1110" data-y="220" data-answers='["nervi olfactori"]'></span>
+            <span class="blank" data-x="1110" data-y="390" data-answers='["cavitat nasal"]'></span>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Parts del nas</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+</div>
+
+<!-- ================= L'ORELLA ================= -->
+<div class="view" id="orella">
+  <a class="back" href="#menu">⬅️ Tornar al menú</a>
+  <h1>👂 L'orella 👂</h1>
+
+  <!-- ===== Exercici 1: text amb buits ===== -->
+  <section class="exercise">
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada paraula al lloc correcte!</p>
+        <div class="text-box" data-text="orella"></div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Paraules</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+
+  <!-- ===== Exercici 2: parts de l'orella ===== -->
+  <section class="exercise">
+    <h2>🔍 Les parts de l'oïda</h2>
+    <div class="layout">
+      <div>
+        <p class="subtitle">Arrossega cada nom a la part de l'orella que li correspon!</p>
+        <div class="diagram-box">
+          <div class="diagram">
+            <!-- La imatge ear.jfif es mostra a 1020 x 770 -->
+            <svg viewBox="0 0 1600 950" xmlns="http://www.w3.org/2000/svg">
+              <image href="ear.jfif" x="280" y="120" width="1020" height="770"/>
+
+              <!-- Línies que assenyalen cada part -->
+              <g stroke="#333" stroke-width="4" fill="#333">
+                <line x1="140" y1="320" x2="352" y2="360"/> <circle cx="352" cy="360" r="8"/> <!-- pavelló auricular -->
+                <line x1="140" y1="520" x2="592" y2="544"/> <circle cx="592" cy="544" r="8"/> <!-- conducte auditiu -->
+                <line x1="140" y1="720" x2="736" y2="544"/> <circle cx="736" cy="544" r="8"/> <!-- timpa / timpà -->
+                <line x1="580" y1="50" x2="728" y2="456"/> <circle cx="728" cy="456" r="8"/> <!-- martell -->
+                <line x1="1040" y1="50" x2="840" y2="488"/> <circle cx="840" cy="488" r="8"/> <!-- finestra oval -->
+                <line x1="1460" y1="280" x2="1128" y2="392"/> <circle cx="1128" cy="392" r="8"/> <!-- nervi auditiu -->
+                <line x1="1460" y1="500" x2="1048" y2="560"/> <circle cx="1048" cy="560" r="8"/> <!-- cargol -->
+              </g>
+            </svg>
+            <!-- Buits (posició en coordenades del dibuix, les mateixes que el viewBox) -->
+            <span class="blank" data-x="140" data-y="320" data-answers='["pavelló auricular", "pavelló auditiu"]'></span>
+            <span class="blank" data-x="140" data-y="520" data-answers='["conducte auditiu"]'></span>
+            <span class="blank" data-x="140" data-y="720" data-answers='["timpa", "timpà"]'></span>
+            <span class="blank" data-x="580" data-y="50" data-answers='["martell"]'></span>
+            <span class="blank" data-x="1040" data-y="50" data-answers='["finestra oval"]'></span>
+            <span class="blank" data-x="1460" data-y="280" data-answers='["nervi auditiu"]'></span>
+            <span class="blank" data-x="1460" data-y="500" data-answers='["cargol"]'></span>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="bank-title">🃏 Parts de l'orella</div>
+        <div class="bank"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="check">✅ Comprovar</button>
+      <button class="reset">🔄 Tornar a començar</button>
+    </div>
+    <div class="result"></div>
+  </section>
+</div>
+
+</div>
+
+<script>// Textos dels exercicis. Les paraules entre [ ] són les que cal endevinar.
+// Si una opció té "/" (p. ex. [llum/mida]), qualsevol d'aquestes paraules és vàlida en aquell buit.
+const TEXTS = {
+ull: `
+L'ull és l'òrgan del sentit de la [vista].
+
+L'ull percep: la [llum/mida], els [colors], les [formes] i la [mida/llum].
+
+La [còrnia] és per on passa la llum cap a la [pupil·la], que s'obre o es tanca perquè passi més o menys llum.
+
+La [retina] capta la imatge i la porta al [nervi òptic] i d'aquí al cervell.
+
+La zona acolorida es diu [iris].
+
+La lent que enfoca els objectes que veiem es diu [cristal·lí].
+`,
+pell: `
+La capa més externa de la pell s'anomena [epidermis].
+
+La capa més interna de la pell s'anomena [dermis], allà es troben les [terminacions nervioses].
+
+Com es diu la capa més profunda de la pell? La [hipodermis].
+
+Quines zones són més sensibles al tacte? Els [dits], les [mans] i les [plantes] dels peus.
+`,
+nas: `
+L'aire entra a través dels [orificis nasals] i arriba a les [fosses nasals] on es troba la [cavitat nasal], que s'encarrega de transmetre les olors.
+
+Aquesta informació arriba a través del [nervi olfactori] al cervell.
+`,
+orella: `
+L'oïda està formada per l'orella externa, que a través del seu [pavelló auditiu/pavelló auricular] rep els sons de l'entorn i aquests sons passen al [conducte auditiu].
+
+L'orella mitjana, formada pel [timpà/timpa] que vibra quan rep els sons i els transmet a la [cadena timpànica].
+
+Aquestes vibracions passen a l'orella interna on trobem el [cargol].
+
+Des d'aquí, a través del [nervi auditiu] s'envia la informació al [cervell].
+`,
+};
+TEXTS.olfacte = TEXTS.nas;
+TEXTS.oida = TEXTS.orella;
+
+// Construeix el text amb els buits
+document.querySelectorAll('.text-box').forEach(textBox => {
+TEXTS[textBox.dataset.text].trim().split(/\n\s*\n/).forEach(paragraph => {
+  const p = document.createElement('p');
+  paragraph.split(/(\[[^\]]+\])/).forEach(part => {
+    if (part.startsWith('[') && part.endsWith(']')) {
+      const options = part.slice(1, -1).split('/').map(s => s.trim());
+      const blank = document.createElement('span');
+      blank.className = 'blank';
+      blank.dataset.answers = JSON.stringify(options);
+      p.appendChild(blank);
+    } else {
+      p.appendChild(document.createTextNode(part));
+    }
+  });
+  textBox.appendChild(p);
+});
+});
+
+// Col·loca els buits de cada diagrama sobre el dibuix
+document.querySelectorAll('.diagram').forEach(diagram => {
+  const vb = diagram.querySelector('svg').viewBox.baseVal;
+  diagram.querySelectorAll('.blank').forEach(b => {
+    b.style.left = ((b.dataset.x - vb.x) / vb.width * 100) + '%';
+    b.style.top = ((b.dataset.y - vb.y) / vb.height * 100) + '%';
+  });
+});
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ---- Configura un exercici (text o diagrama) ----
+function setupExercise(section) {
+  const bank = section.querySelector('.bank');
+  const result = section.querySelector('.result');
+  const blanks = section.querySelectorAll('.blank');
+  // Una targeta per buit (la primera opció de cada buit)
+  const words = [...blanks].map(b => JSON.parse(b.dataset.answers)[0]);
+
+  function createCards() {
+    bank.innerHTML = '';
+    shuffle(words).forEach(word => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.textContent = word;
+      card.addEventListener('pointerdown', e => startDrag(e, section));
+      bank.appendChild(card);
+    });
+  }
+
+  section.querySelector('.check').addEventListener('click', () => {
+    let correct = 0, empty = 0;
+    blanks.forEach(b => {
+      b.classList.remove('correct', 'wrong');
+      const card = b.querySelector('.card');
+      if (!card) { empty++; return; }
+      if (JSON.parse(b.dataset.answers).includes(card.textContent)) {
+        b.classList.add('correct');
+        correct++;
+      } else {
+        b.classList.add('wrong');
+      }
+    });
+
+    const total = blanks.length;
+    if (correct === total) {
+      result.textContent = `🎉 Perfecte! Has encertat les ${total} paraules! 🌟`;
+      result.className = 'result good';
+    } else {
+      let msg = `Has encertat ${correct} de ${total}.`;
+      if (empty > 0) msg += ` Encara queden ${empty} buits per omplir.`;
+      msg += ' Torna-ho a provar! 💪';
+      result.textContent = msg;
+      result.className = 'result bad';
+    }
+  });
+
+  section.querySelector('.reset').addEventListener('click', () => {
+    blanks.forEach(b => {
+      b.classList.remove('filled');
+      b.innerHTML = '';
+    });
+    clearMarks(section);
+    createCards();
+  });
+
+  createCards();
+}
+
+function clearMarks(section) {
+  section.querySelectorAll('.blank').forEach(b => b.classList.remove('correct', 'wrong'));
+  const result = section.querySelector('.result');
+  result.textContent = '';
+  result.className = 'result';
+}
+
+// ---- Arrossegar (funciona amb ratolí i amb pantalla tàctil) ----
+let drag = null;
+
+function dropTargetAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const target = el.closest('.blank') || el.closest('.bank');
+  // Només es pot deixar la targeta dins del seu propi exercici
+  if (!target || target.closest('.exercise') !== drag.section) return null;
+  return target;
+}
+
+function startDrag(e, section) {
+  e.preventDefault();
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  drag = {
+    card,
+    section,
+    origin: card.parentElement,
+    offsetX: e.clientX - rect.left,
+    offsetY: e.clientY - rect.top,
+    target: null,
+  };
+  card.style.width = rect.width + 'px';
+  card.classList.add('dragging');
+  document.body.appendChild(card);
+  moveCard(e.clientX, e.clientY);
+  clearMarks(section);
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+}
+
+function moveCard(x, y) {
+  drag.card.style.left = (x - drag.offsetX) + 'px';
+  drag.card.style.top = (y - drag.offsetY) + 'px';
+}
+
+function onMove(e) {
+  moveCard(e.clientX, e.clientY);
+  const target = dropTargetAt(e.clientX, e.clientY);
+  if (target !== drag.target) {
+    if (drag.target) drag.target.classList.remove('hover');
+    if (target) target.classList.add('hover');
+    drag.target = target;
+  }
+}
+
+function endDrag(e) {
+  document.removeEventListener('pointermove', onMove);
+  document.removeEventListener('pointerup', endDrag);
+  document.removeEventListener('pointercancel', endDrag);
+
+  const { card, origin, section } = drag;
+  const target = dropTargetAt(e.clientX, e.clientY) || origin;
+  if (drag.target) drag.target.classList.remove('hover');
+
+  card.classList.remove('dragging');
+  card.style.left = card.style.top = card.style.width = '';
+
+  if (target.classList.contains('blank')) {
+    // Si el buit ja té una targeta, la intercanviem amb l'origen
+    const existing = target.querySelector('.card');
+    if (existing) placeCard(existing, origin, section);
+    placeCard(card, target, section);
+  } else {
+    placeCard(card, section.querySelector('.bank'), section);
+  }
+  drag = null;
+}
+
+function placeCard(card, container, section) {
+  container.appendChild(card);
+  if (container.classList.contains('blank')) container.classList.add('filled');
+  section.querySelectorAll('.blank').forEach(b => {
+    if (!b.querySelector('.card')) b.classList.remove('filled');
+  });
+}
+
+document.querySelectorAll('.exercise').forEach(setupExercise);
+
+// ---- Navegació: menú, ull, pell, nas, orella ----
+function showView() {
+  let id = location.hash.slice(1);
+  if (id === 'olfacte') id = 'nas';
+  if (id === 'oida' || id === 'oïda') id = 'orella';
+  const view = document.getElementById(id);
+  const target = view && view.classList.contains('view') ? view : document.getElementById('menu');
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v === target));
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', showView);
+showView();
+</script>
+</body>
+</html>
